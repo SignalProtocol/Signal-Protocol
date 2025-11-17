@@ -216,8 +216,12 @@ export default function PaymentModal({
         `https://signal-pipeline.up.railway.app/signal/${uuid}?network=devnet`
       );
       
-    } catch (err) {
-      setInitiatePaymentResponse(err.response?.data);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setInitiatePaymentResponse(err.response?.data);
+      } else {
+        setInitiatePaymentResponse({ error: String(err) });
+      }
     } finally {
       setLoading(false);
     }

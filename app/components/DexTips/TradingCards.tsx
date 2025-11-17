@@ -89,7 +89,8 @@ const TradingCards: React.FC<TradingCardsProps> = ({
           sl: {
             price: unblockedSignal.stop_loss?.price || "-",
             percentage:
-              unblockedSignal.stop_loss?.stop_loss_pnl_percent?.toFixed(2) || "-",
+              unblockedSignal.stop_loss?.stop_loss_pnl_percent?.toFixed(2) ||
+              "-",
           },
           leverage: unblockedSignal.leverage || card.leverage,
           long: unblockedSignal.action === "Long",
@@ -364,7 +365,9 @@ const TradingCards: React.FC<TradingCardsProps> = ({
               <div className="relative flex justify-end mt-3 pt-2 border-t border-[#2a2a33] z-10">
                 {isUnlocked && (
                   <a
-                    href={`https://app.hyperliquid.xyz/trade/${card.token.split("/")[0]}`}
+                    href={`https://app.hyperliquid.xyz/trade/${
+                      card.token.split("/")[0]
+                    }`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold transition-all duration-300 transform hover:scale-105 border-2 border-green-500/50 text-green-400 hover:border-green-400 hover:bg-green-500/10 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] bg-transparent no-underline"
