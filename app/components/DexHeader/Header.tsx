@@ -20,7 +20,7 @@ const Header = ({
       style={{ zIndex: 100 }}
     >
       <div className="flex items-center gap-3">
-        <img src="/images/logo.png" alt="Signal Protocol" className="w-28 md:w-32" />
+        <img src="/images/logo.png" alt="Signal402" className="w-28 md:w-32" />
       </div>
       <div className="flex items-center gap-4">
         {tokenBalance !== null && tokenBalance !== undefined ? (

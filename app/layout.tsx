@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Signal Protocol",
+  title: "Signal402",
   description: "Professional trading signals dashboard",
   icons: {
     icon: [
