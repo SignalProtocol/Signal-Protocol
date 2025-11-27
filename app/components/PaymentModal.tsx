@@ -42,6 +42,7 @@ export default function PaymentModal({
   const [error, setError] = useState<string>("");
   const [initialPaymentResponse, setInitiatePaymentResponse] =
     useState<any>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   // Method inspired by index.ts sendPaymentWithSeed - adapted for browser wallet
   const handlePayAndGetMessage = async () => {
@@ -145,6 +146,7 @@ export default function PaymentModal({
       transaction.feePayer = publicKey;
 
       const signedTx = await signTransaction(transaction);
+      setIsConfirming(true);
       const signature = await connection.sendRawTransaction(
         signedTx.serialize()
       );
@@ -174,6 +176,7 @@ export default function PaymentModal({
     } finally {
       setError("");
       setLoading(false);
+      setIsConfirming(false);
       dispatch({ type: "SET_TX_SIGNATURE", payload: "" });
     }
   };
@@ -314,12 +317,16 @@ export default function PaymentModal({
               ></div>
             </div>
             <h3 className="text-lg font-semibold mb-2">
-              {initialPaymentResponse?.payment_instruction?.amount_usdc
-                ? "Processing the transaction."
+              {isConfirming
+                ? "Processing transaction"
+                : initialPaymentResponse?.payment_instruction?.amount_usdc
+                ? "Approve Transaction"
                 : "Setting up your transaction"}
             </h3>
             <p className="text-gray-400">
-              {initialPaymentResponse?.payment_instruction?.amount_usdc
+              {isConfirming
+                ? "Please wait..."
+                : initialPaymentResponse?.payment_instruction?.amount_usdc
                 ? "Please approve in your wallet."
                 : "Please wait..."}
             </p>
@@ -398,7 +405,7 @@ export default function PaymentModal({
               }`}
             >
               {loading
-                ? "Processing Payment..."
+                ? "Processing Payment... Please wait..."
                 : !connected
                 ? "Connect Wallet First"
                 : `Pay ${initialPaymentResponse?.payment_instruction?.amount_usdc} USDC & Unlock Signal`}
