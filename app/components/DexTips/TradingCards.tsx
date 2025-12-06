@@ -325,9 +325,17 @@ const TradingCards: React.FC<TradingCardsProps> = ({ cards, onUnlock }) => {
                 <div className="flex items-start justify-between mb-3 pb-2 border-b border-[#2a2a33]">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-400/20 border border-cyan-500/30 flex items-center justify-center">
-                      <span className="text-cyan-400 font-bold text-[10px]">
-                        {card.token.split(".")[0].slice(0, 2)}
-                      </span>
+                      {card?.logo_url ? (
+                        <img
+                          src={card?.logo_url}
+                          alt={card.token.split(".")[0].slice(0, 2)}
+                          className="object-contain w-2/3 h-2/3"
+                        />
+                      ) : (
+                        <span className="text-cyan-400 font-bold text-[10px]">
+                          {card.token.split(".")[0].slice(0, 2)}
+                        </span>
+                      )}
                     </div>
                     <div>
                       <p className="font-bold text-base text-white">
