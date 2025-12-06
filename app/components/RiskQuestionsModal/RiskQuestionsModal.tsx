@@ -6,6 +6,7 @@ import axios from "axios";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { GlobalContext } from "../../context/GlobalContext";
 import { useMixpanel } from "../../context/MixpanelContext";
+import PUBLIC_API_BASE_URL from "@/app";
 
 interface RiskQuestionsModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const RiskQuestionsModal: React.FC<RiskQuestionsModalProps> = ({
   const { riskScore } = state;
   const { connected, publicKey } = useWallet();
   const { trackEvent } = useMixpanel();
+  const API_BASE_URL = PUBLIC_API_BASE_URL;
   const [showInstructions, setShowInstructions] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<{

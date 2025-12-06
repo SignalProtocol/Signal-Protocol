@@ -6,7 +6,7 @@ export interface GlobalState {
   cardUUID?: string | null;
   unLockedCards?: any[];
   userProfileStatus?: number;
-  selectedDex?: string;
+  selectedDex?: string | null;
 }
 
 export type GlobalAction =

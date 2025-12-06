@@ -23,22 +23,6 @@ const Dashboard = () => {
   const { connection } = useConnection();
   const { publicKey, connected } = useWallet();
   const { trackEvent } = useMixpanel();
-  const STORED_UNBLOCKED_CARDS = useMemo(() => {
-    const stored = localStorage.getItem("unlockedCards");
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  }, []);
-
-  const WALLETADDRESS = useMemo(
-    () => publicKey?.toBase58() || null,
-    [publicKey]
-  );
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
@@ -47,6 +31,26 @@ const Dashboard = () => {
   const [streamedSignals, setStreamedSignals] = useState<any[]>([]);
   const [showInsufficientTokensModal, setShowInsufficientTokensModal] =
     useState(false);
+  const [storedUnblockedCards, setStoredUnblockedCards] = useState<any[]>([]);
+
+  const WALLETADDRESS = useMemo(
+    () => publicKey?.toBase58() || null,
+    [publicKey]
+  );
+
+  // Initialize stored unlocked cards from localStorage on client-side only
+  useEffect(() => {
+    const stored = localStorage.getItem("unlockedCards");
+    if (stored) {
+      try {
+        setStoredUnblockedCards(JSON.parse(stored));
+      } catch {
+        setStoredUnblockedCards([]);
+      }
+    }
+  }, []);
+
+  const STORED_UNBLOCKED_CARDS = storedUnblockedCards;
 
   const handleUnlock = (index: number, uuid: string) => {
     const unlockedCount = STORED_UNBLOCKED_CARDS?.length || 0;
@@ -121,13 +125,8 @@ const Dashboard = () => {
       let mergedUnlockedCards: any[] = [];
 
       // Get cards from localStorage
-
-      if (STORED_UNBLOCKED_CARDS) {
-        try {
-          mergedUnlockedCards = JSON.parse(STORED_UNBLOCKED_CARDS);
-        } catch (error) {
-          console.error("Error parsing localStorage unlockedCards:", error);
-        }
+      if (STORED_UNBLOCKED_CARDS && Array.isArray(STORED_UNBLOCKED_CARDS)) {
+        mergedUnlockedCards = STORED_UNBLOCKED_CARDS;
       }
 
       // Merge with API cards (if any)
