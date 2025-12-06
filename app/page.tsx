@@ -12,24 +12,62 @@ import Header from "./components/DexHeader/Header";
 import axios from "axios";
 import { GlobalContext } from "./context/GlobalContext";
 import { useMixpanel } from "./context/MixpanelContext";
+import InsufficientTokensToUnblockTipModal from "./components/DexTips/InsufficientTokensToUnblockTipModal";
+import PUBLIC_API_BASE_URL from ".";
+import NoTradingCards from "./components/DexTips/NoTradingCards";
 
 const Dashboard = () => {
   const { state, dispatch } = useContext(GlobalContext);
-  const { riskScore } = state;
+  const { riskScore, tokenBalance } = state;
+  const API_BASE_URL = PUBLIC_API_BASE_URL;
   const { connection } = useConnection();
   const { publicKey, connected } = useWallet();
   const { trackEvent } = useMixpanel();
-  const WALLETADDRESS = useMemo(
-    () => publicKey?.toBase58() || null,
-    [publicKey]
-  );
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [showRiskQuestionModal, setShowRiskQuestionModal] = useState(false);
   const [showRiskResultModal, setShowRiskResultModal] = useState(false);
   const [streamedSignals, setStreamedSignals] = useState<any[]>([]);
+  const [showInsufficientTokensModal, setShowInsufficientTokensModal] =
+    useState(false);
+  const [storedUnblockedCards, setStoredUnblockedCards] = useState<any[]>([]);
 
-  const handleUnlock = (index: number, uuid: "") => {
+  const WALLETADDRESS = useMemo(
+    () => publicKey?.toBase58() || null,
+    [publicKey]
+  );
+
+  // Initialize stored unlocked cards from localStorage on client-side only
+  useEffect(() => {
+    const stored = localStorage.getItem("unlockedCards");
+    if (stored) {
+      try {
+        setStoredUnblockedCards(JSON.parse(stored));
+      } catch {
+        setStoredUnblockedCards([]);
+      }
+    }
+  }, []);
+
+  const STORED_UNBLOCKED_CARDS = storedUnblockedCards;
+
+  const handleUnlock = (index: number, uuid: string) => {
+    const unlockedCount = STORED_UNBLOCKED_CARDS?.length || 0;
+
+    // Check if user has reached their tier's unlock limit
+    const hasReachedLimit =
+      (tokenBalance !== null && tokenBalance < 69) || // No tier - can't unlock
+      (tokenBalance === 69 && unlockedCount >= 1) ||
+      (tokenBalance === 420 && unlockedCount >= 5) ||
+      (tokenBalance === 1008 && unlockedCount >= 10) ||
+      (tokenBalance === 10008 && unlockedCount >= 100);
+
+    if (hasReachedLimit) {
+      setShowInsufficientTokensModal(true);
+      return;
+    }
+
     setSelectedCard(index);
     setShowPaymentModal(true);
     dispatch({ type: "SET_CARD_UUID", payload: uuid });
@@ -74,22 +112,21 @@ const Dashboard = () => {
 
     try {
       const response = await axios.get(
-        `https://signal-pipeline.up.railway.app/getuserprofile?wallet_address=${WALLETADDRESS}`
+        `${API_BASE_URL}/getuserprofile?wallet_address=${WALLETADDRESS}`
       );
-      const data = response.data;
+      const data = response?.data;
       dispatch({ type: "SET_RISK_SCORE", payload: data?.risk_score });
+      dispatch({
+        type: "SET_SELECTED_DEX",
+        payload: data?.preferred_dex || "",
+      });
 
       // Merge unlocked cards from API with localStorage
       let mergedUnlockedCards: any[] = [];
 
       // Get cards from localStorage
-      const storedCards = localStorage.getItem("unlockedCards");
-      if (storedCards) {
-        try {
-          mergedUnlockedCards = JSON.parse(storedCards);
-        } catch (error) {
-          console.error("Error parsing localStorage unlockedCards:", error);
-        }
+      if (STORED_UNBLOCKED_CARDS && Array.isArray(STORED_UNBLOCKED_CARDS)) {
+        mergedUnlockedCards = STORED_UNBLOCKED_CARDS;
       }
 
       // Merge with API cards (if any)
@@ -135,7 +172,7 @@ const Dashboard = () => {
 
       try {
         const response = await fetch(
-          `https://signal-pipeline.up.railway.app/signal/stream?risk=${riskLevel}`,
+          `${API_BASE_URL}/signal/stream?risk=${riskLevel}`,
           { signal: abortSignal }
         );
 
@@ -259,13 +296,7 @@ const Dashboard = () => {
           {connected ? (
             <TradingCards cards={streamedSignals} onUnlock={handleUnlock} />
           ) : (
-            <section className="p-4 mt-8 rounded-lg border border-[#2a2a33] bg-[#0e0e12]/30 h-2/3 flex items-center  justify-center">
-              <div className="text-center text-gray-400 text-lg font-semibold">
-                <h1 className="mb-3">
-                  Connect your wallet to view trading signals.
-                </h1>
-              </div>
-            </section>
+            <NoTradingCards />
           )}
         </main>
       </div>
@@ -275,8 +306,11 @@ const Dashboard = () => {
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         onSuccess={handlePaymentSuccess}
-        // @ts-ignore: cardToken isn't declared in PaymentModalProps; passing it anyway
-        cardToken={selectedCard !== null ? streamedSignals[selectedCard]?.token : undefined}
+        cardToken={
+          selectedCard !== null
+            ? streamedSignals[selectedCard]?.token
+            : undefined
+        }
       />
 
       <RiskQuestionsModal
@@ -288,6 +322,11 @@ const Dashboard = () => {
       <RiskResultModal
         isOpen={showRiskResultModal}
         onClose={() => setShowRiskResultModal(false)}
+      />
+
+      <InsufficientTokensToUnblockTipModal
+        isOpen={showInsufficientTokensModal}
+        onClose={() => setShowInsufficientTokensModal(false)}
       />
     </div>
   );
