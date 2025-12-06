@@ -1,11 +1,20 @@
-"use client";
+import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { SolanaWalletProvider } from "./config/solana";
-import WalletContextProvider from "./components/WalletContextProvider";
-import "@solana/wallet-adapter-react-ui/styles.css";
-import GlobalProvider from "./context/GlobalContext";
-import { MixpanelProvider } from "./context/MixpanelContext";
+import Providers from "./components/Providers";
+
+export const metadata: Metadata = {
+  title: "Signal",
+  icons: {
+    icon: [
+      { url: "/favicon/favicon.ico", type: "image/x-icon" },
+      { url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/favicon/apple-touch-icon.png",
+  },
+  manifest: "/favicon/site.webmanifest",
+};
 
 const inter = Inter({
   variable: "--font-inter",
@@ -29,13 +38,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        <MixpanelProvider>
-          <GlobalProvider>
-            <WalletContextProvider>
-              <SolanaWalletProvider>{children}</SolanaWalletProvider>
-            </WalletContextProvider>
-          </GlobalProvider>
-        </MixpanelProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
