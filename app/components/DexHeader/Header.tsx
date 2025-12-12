@@ -135,7 +135,7 @@ const Header = ({
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-4">
-          {tokenBalance !== null && tokenBalance !== undefined ? (
+          {tokenBalance !== null && tokenBalance !== undefined && connected ? (
             <div className="p-2 px-4 text-sm font-light rounded-full border-3 border-cyan-500/50 bg-[#1f1f25] transition-all duration-300 text-white">
               Bal:{" "}
               <b className="gradient-text-color font-semibold">
