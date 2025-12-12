@@ -247,7 +247,7 @@ const HallOfFame = () => {
                 <div
                   className={`px-2 py-1 rounded-md border text-[10px] uppercase font-bold tracking-wide ${badgeColor}`}
                 >
-                  {signal?.performance.final_outcome.replace("_", " ")}
+                  {signal?.performance?.final_outcome?.replace("_", " ")}
                 </div>
               </div>
 
