@@ -31,8 +31,15 @@ const HallOfFame = () => {
     return;
   }
 
+  // Filter signals to show only analyzed ones with exit targets
+  const filteredSignals =
+    signalHistory?.signals?.filter(
+      (s: any) =>
+        s.performance?.analyzed === true &&
+        s.performance?.targets_hit && s.performance?.targets_hit.length > 0 ) || [];
+
   // Calculate average PnL for profitable trades
-  const profitableSignals = signalHistory?.signals?.filter(
+  const profitableSignals = filteredSignals?.filter(
     (s: any) => s.performance.final_outcome === "profitable"
   );
   const avgProfit =
@@ -83,7 +90,7 @@ const HallOfFame = () => {
         {[
           {
             title: "Total Signals",
-            value: signalHistory?.count,
+            value: filteredSignals?.length || 0,
             themeColor: "purple" as const,
             icon: (
               <svg
@@ -103,10 +110,16 @@ const HallOfFame = () => {
             children: (
               <div className="flex gap-2">
                 <span className="px-2 py-0.5 rounded bg-green-500/10 text-green-500 text-[10px] border border-green-500/20">
-                  {signalHistory?.summary?.profitable} Profitable
+                  {filteredSignals?.filter(
+                    (s: any) => s.performance.final_outcome === "profitable"
+                  ).length || 0}{" "}
+                  Profitable
                 </span>
                 <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-500 text-[10px] border border-red-500/20">
-                  {signalHistory?.summary?.stopped_out} Stopped
+                  {filteredSignals?.filter(
+                    (s: any) => s.performance.final_outcome === "stopped_out"
+                  ).length || 0}{" "}
+                  Stopped
                 </span>
               </div>
             ),
@@ -140,10 +153,28 @@ const HallOfFame = () => {
             title: "Win Rate",
             value: (
               <div className="flex items-baseline gap-2">
-                <span>{signalHistory?.summary?.win_rate}%</span>
+                <span>
+                  {filteredSignals?.length > 0
+                    ? (
+                        (filteredSignals.filter(
+                          (s: any) =>
+                            s.performance.final_outcome === "profitable"
+                        ).length /
+                          filteredSignals.length) *
+                        100
+                      ).toFixed(1)
+                    : 0}
+                  %
+                </span>
                 <span className="text-green-400 text-xs font-mono">
-                  {signalHistory?.summary?.profitable}W -{" "}
-                  {signalHistory?.summary?.stopped_out}L
+                  {filteredSignals?.filter(
+                    (s: any) => s.performance.final_outcome === "profitable"
+                  ).length || 0}
+                  W -{" "}
+                  {filteredSignals?.filter(
+                    (s: any) => s.performance.final_outcome === "stopped_out"
+                  ).length || 0}
+                  L
                 </span>
               </div>
             ),
@@ -167,7 +198,20 @@ const HallOfFame = () => {
               <div className="w-full h-1.5 bg-[#2a2a33] rounded-full mt-1 overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
-                  style={{ width: `${signalHistory?.summary?.win_rate}%` }}
+                  style={{
+                    width: `${
+                      filteredSignals?.length > 0
+                        ? (
+                            (filteredSignals.filter(
+                              (s: any) =>
+                                s.performance.final_outcome === "profitable"
+                            ).length /
+                              filteredSignals.length) *
+                            100
+                          ).toFixed(1)
+                        : 0
+                    }%`,
+                  }}
                 />
               </div>
             ),
@@ -187,7 +231,7 @@ const HallOfFame = () => {
 
       {/* Signals Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {signalHistory?.signals?.map((signal: any) => {
+        {filteredSignals?.map((signal: any) => {
           const isProfit = signal?.performance?.final_outcome === "profitable";
           const isLoss = signal?.performance?.final_outcome === "stopped_out";
 
