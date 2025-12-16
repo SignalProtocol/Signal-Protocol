@@ -67,16 +67,15 @@ export const trackEvent = (
 };
 
 export const identifyUser = (
-  userId: string,
-  properties?: Record<string, any>
+  walletAddress?: string
 ) => {
   try {
     const mp = getMixpanel();
     if (mp) {
-      mp.identify(userId);
-      if (properties) {
-        mp.people.set(properties);
-      }
+      mp.identify(walletAddress);
+      // if (properties) {
+      //   mp.people.set(properties);
+      // }
     }
   } catch (error) {
     console.warn("Failed to identify user:", error);

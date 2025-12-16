@@ -5,16 +5,19 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { GlobalContext } from "../../context/GlobalContext";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useMixpanel } from "../../context/MixpanelContext";
+import mixpanel from "mixpanel-browser";
 
 const Header = ({
   setShowRiskQuestionModal,
+  storedUnblockedCards
 }: {
   setShowRiskQuestionModal?: (show: boolean) => void;
+  storedUnblockedCards?: any;
 }) => {
   const { state } = useContext(GlobalContext);
   const { tokenBalance, riskScore, userProfileStatus } = state;
   const { connected, publicKey } = useWallet();
-  const { trackEvent } = useMixpanel();
+  const { trackEvent, identifyUser } = useMixpanel();
   const prevConnectedRef = useRef<boolean>(false);
   const walletAddressRef = useRef<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -42,16 +45,25 @@ const Header = ({
 
     if (connected && !prevConnectedRef.current) {
       // Wallet connected
+      identifyUser(currentWalletAddress || '');
+      mixpanel.people.set({
+        walletAddress: currentWalletAddress,
+        timestamp: new Date().toISOString(),
+        riskScore: riskScore || 'N/A',
+        cardUnBlocked: storedUnblockedCards?.map((card: any) => card?.pair) || []
+      });
       trackEvent("Wallet Connected", {
         walletAddress: currentWalletAddress,
         timestamp: new Date().toISOString(),
       });
+       
     } else if (!connected && prevConnectedRef.current) {
       // Wallet disconnected - use the stored wallet address
       trackEvent("Wallet Disconnected", {
         walletAddress: walletAddressRef.current,
         timestamp: new Date().toISOString(),
       });
+      mixpanel.reset();
       // Clear the stored address after disconnection
       walletAddressRef.current = null;
     }

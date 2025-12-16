@@ -300,7 +300,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-[#0b0b0f] to-black text-white flex flex-col">
       {/* Top Bar */}
-      <Header setShowRiskQuestionModal={setShowRiskQuestionModal} />
+      <Header setShowRiskQuestionModal={setShowRiskQuestionModal} storedUnblockedCards={storedUnblockedCards}  />
 
       <div className="flex flex-1">
         {/* Main Content */}
