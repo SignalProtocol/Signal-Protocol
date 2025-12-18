@@ -17,6 +17,7 @@ interface MixpanelContextType {
   identifyUser: (userId: string, properties?: Record<string, any>) => void;
   setUserProperties: (properties: Record<string, any>) => void;
   resetUser: () => void;
+  registerSuperProperties: (properties: Record<string, any>) => void;
 }
 
 const MixpanelContext = createContext<MixpanelContextType | undefined>(
@@ -56,6 +57,10 @@ export const MixpanelProvider: React.FC<MixpanelProviderProps> = ({
     identifyUser,
     setUserProperties,
     resetUser,
+    registerSuperProperties: (props) => {
+      const mp = getMixpanel();
+      if (mp) mp.register(props);
+    },
   };
 
   return (

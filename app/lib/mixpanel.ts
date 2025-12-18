@@ -58,7 +58,8 @@ export const trackEvent = (
         ...properties,
         // Add OS info for debugging cross-platform issues
         $os: typeof navigator !== "undefined" ? navigator.platform : undefined,
-        $browser: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+        $browser:
+          typeof navigator !== "undefined" ? navigator.userAgent : undefined,
       });
     }
   } catch (error) {
@@ -66,9 +67,7 @@ export const trackEvent = (
   }
 };
 
-export const identifyUser = (
-  walletAddress?: string
-) => {
+export const identifyUser = (walletAddress?: string) => {
   try {
     const mp = getMixpanel();
     if (mp) {
@@ -101,6 +100,17 @@ export const resetUser = () => {
     }
   } catch (error) {
     console.warn("Failed to reset user:", error);
+  }
+};
+
+export const registerSuperProperties = (properties: Record<string, any>) => {
+  try {
+    const mp = getMixpanel();
+    if (mp) {
+      mp.register(properties);
+    }
+  } catch (error) {
+    console.warn("Failed to register super properties:", error);
   }
 };
 

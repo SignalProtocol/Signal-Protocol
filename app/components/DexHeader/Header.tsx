@@ -5,11 +5,10 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { GlobalContext } from "../../context/GlobalContext";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useMixpanel } from "../../context/MixpanelContext";
-import mixpanel from "mixpanel-browser";
 
 const Header = ({
   setShowRiskQuestionModal,
-  storedUnblockedCards
+  storedUnblockedCards,
 }: {
   setShowRiskQuestionModal?: (show: boolean) => void;
   storedUnblockedCards?: any;
@@ -17,7 +16,13 @@ const Header = ({
   const { state } = useContext(GlobalContext);
   const { tokenBalance, riskScore, userProfileStatus } = state;
   const { connected, publicKey } = useWallet();
-  const { trackEvent, identifyUser } = useMixpanel();
+  const {
+    trackEvent,
+    identifyUser,
+    registerSuperProperties,
+    setUserProperties,
+    resetUser,
+  } = useMixpanel();
   const prevConnectedRef = useRef<boolean>(false);
   const walletAddressRef = useRef<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -38,38 +43,82 @@ const Header = ({
   useEffect(() => {
     const currentWalletAddress = publicKey?.toBase58();
 
+    // Check if the user switched addresses (handles both direct switch and disconnect->connect sequences)
+    if (
+      walletAddressRef.current &&
+      currentWalletAddress &&
+      walletAddressRef.current !== currentWalletAddress
+    ) {
+      window.location.reload();
+      return;
+    }
+
     // Store the current wallet address when connected
     if (connected && currentWalletAddress) {
       walletAddressRef.current = currentWalletAddress;
     }
 
-    if (connected && !prevConnectedRef.current) {
+    if (connected && !prevConnectedRef.current && currentWalletAddress) {
       // Wallet connected
-      identifyUser(currentWalletAddress || '');
-      mixpanel.people.set({
+      identifyUser(currentWalletAddress);
+
+      // Initialize basic user properties
+      setUserProperties({
         walletAddress: currentWalletAddress,
-        timestamp: new Date().toISOString(),
-        riskScore: riskScore || 'N/A',
-        cardUnBlocked: storedUnblockedCards?.map((card: any) => card?.pair) || []
+        timestamp: new Date().toString(),
       });
-      trackEvent("Wallet Connected", {
-        walletAddress: currentWalletAddress,
-        timestamp: new Date().toISOString(),
-      });
-       
+
+      // Moved "Wallet Connected" tracking to page.tsx > getUserProfileAPICall
+      // to ensure Risk Score is included in the event properties.
     } else if (!connected && prevConnectedRef.current) {
       // Wallet disconnected - use the stored wallet address
       trackEvent("Wallet Disconnected", {
         walletAddress: walletAddressRef.current,
         timestamp: new Date().toISOString(),
       });
-      mixpanel.reset();
-      // Clear the stored address after disconnection
-      walletAddressRef.current = null;
+      resetUser();
+      // Do not clear walletAddressRef.current here, so we can detect switches if they reconnect with a different wallet
     }
 
     prevConnectedRef.current = connected;
-  }, [connected, publicKey, trackEvent]);
+  }, [
+    connected,
+    publicKey,
+    trackEvent,
+    identifyUser,
+    setUserProperties,
+    resetUser,
+  ]);
+
+  // Sync Risk Score and User State to Mixpanel whenever they change
+  useEffect(() => {
+    if (connected && publicKey) {
+      const currentWalletAddress = publicKey.toBase58();
+
+      // Properties to sync to both User Profile and Events
+      const userStateProps = {
+        riskScore:
+          riskScore !== null && riskScore !== undefined ? riskScore : "N/A",
+        cardUnBlocked:
+          storedUnblockedCards?.map((card: any) => card?.pair) || [],
+        $name: currentWalletAddress, // Set name as wallet address for easier identification in UI
+        walletAddress: currentWalletAddress,
+      };
+
+      // Set as People/User Properties (for Users Table)
+      setUserProperties(userStateProps);
+
+      // Set as Super Properties (for All Events)
+      registerSuperProperties(userStateProps);
+    }
+  }, [
+    connected,
+    publicKey,
+    riskScore,
+    storedUnblockedCards,
+    setUserProperties,
+    registerSuperProperties,
+  ]);
 
   // Close mobile menu on escape key
   useEffect(() => {

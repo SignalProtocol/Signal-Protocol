@@ -22,8 +22,9 @@ const Dashboard = () => {
   const { riskScore, tokenBalance } = state;
   const API_BASE_URL = PUBLIC_API_BASE_URL;
   const { connection } = useConnection();
-  const { publicKey, connected } = useWallet();
-  const { trackEvent } = useMixpanel();
+  const { connected, publicKey } = useWallet();
+  const { trackEvent, setUserProperties, registerSuperProperties } =
+    useMixpanel();
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
@@ -121,6 +122,8 @@ const Dashboard = () => {
         `${API_BASE_URL}/getuserprofile?wallet_address=${WALLETADDRESS}`
       );
       const data = response?.data;
+      console.log("getUserProfileAPICall RESPONSE:", data); // DEBUG
+
       dispatch({ type: "SET_RISK_SCORE", payload: data?.risk_score });
       dispatch({
         type: "SET_SELECTED_DEX",
@@ -149,6 +152,25 @@ const Dashboard = () => {
       }
 
       dispatch({ type: "SET_UNLOCKED_CARDS", payload: mergedUnlockedCards });
+
+      // Update Mixpanel with user profile data immediately
+      const userProps = {
+        riskScore: data?.risk_score,
+        walletAddress: WALLETADDRESS,
+        $name: WALLETADDRESS,
+        cardUnBlocked:
+          mergedUnlockedCards?.map((card: any) => card?.pair || card?.token) ||
+          [],
+      };
+
+      setUserProperties(userProps);
+      registerSuperProperties(userProps); // Ensure this property is on all future events
+
+      // Track "Wallet Connected" here now that we have the full profile
+      trackEvent("Wallet Connected", {
+        ...userProps,
+        timestamp: new Date().toString(),
+      });
     } catch (error) {
       console.error(
         "Error fetching user profile:",
@@ -300,7 +322,10 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-[#0b0b0f] to-black text-white flex flex-col">
       {/* Top Bar */}
-      <Header setShowRiskQuestionModal={setShowRiskQuestionModal} storedUnblockedCards={storedUnblockedCards}  />
+      <Header
+        setShowRiskQuestionModal={setShowRiskQuestionModal}
+        storedUnblockedCards={storedUnblockedCards}
+      />
 
       <div className="flex flex-1">
         {/* Main Content */}
