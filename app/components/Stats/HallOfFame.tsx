@@ -12,7 +12,7 @@ const HallOfFame = () => {
   const getHistorySignalData = async () => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/signals?force_refresh=true&min_age_hours=24&limit=10`
+        `${API_BASE_URL}/signals?force_refresh=true&min_age_hours=24&limit=100` // TODO: Change limit back to 10
       );
       const signalsHistory = response?.data;
       dispatch({
@@ -36,7 +36,9 @@ const HallOfFame = () => {
     signalHistory?.signals?.filter(
       (s: any) =>
         s.performance?.analyzed === true &&
-        s.performance?.targets_hit && s.performance?.targets_hit.length > 0 ) || [];
+        s.performance?.targets_hit &&
+        s.performance?.targets_hit.length > 0
+    ) || [];
 
   // Calculate average PnL for profitable trades
   const profitableSignals = filteredSignals?.filter(

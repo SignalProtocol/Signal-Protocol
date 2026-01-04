@@ -9,17 +9,22 @@ export const initMixpanel = () => {
     if (token) {
       try {
         mixpanel.init(token, {
-          debug: process.env.NODE_ENV === "development",
+          // debug: process.env.NODE_ENV === "development",
+          debug: true,
           track_pageview: true,
           // Use 'cookie' for better cross-browser compatibility (especially Safari/Mac)
           // Falls back gracefully if cookies are blocked
-          persistence: "cookie",
-          // Ignore Do Not Track setting to ensure tracking works consistently
+          // persistence: "cookie",
+          persistence: "localStorage",
+          cross_subdomain_cookie: false,
+          secure_cookie: true,
           ignore_dnt: true,
+          // Ignore Do Not Track setting to ensure tracking works consistently
+          // ignore_dnt: true,
           // Use first-party cookies to avoid third-party cookie blocking
           cross_site_cookie: false,
           // Secure cookie settings for HTTPS
-          secure_cookie: window.location.protocol === "https:",
+          // secure_cookie: window.location.protocol === "https:",
           // Set cookie domain to current domain for better Safari compatibility
           cookie_domain: window.location.hostname,
           // Disable batch requests for more reliable tracking on all browsers
